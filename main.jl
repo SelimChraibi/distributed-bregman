@@ -2,13 +2,13 @@ using Distributed
 using DistributedArrays
 
 
-n_workers = 10
-addprocs(n_workers);
+n_workers = 3
+addprocs(n_workers,exeflags="--project");
 
 include("./src/DistributedOptimization.jl")
 
 
-n,m = 50, 20
+n,m = 30, 20
 A = [@spawnat worker rand(n÷nworkers(),m) for worker in workers()]
 A = reshape(A, :, 1)
 A = DArray(A); # +
@@ -36,10 +36,10 @@ x_star_paper = history_sync_paper.logs["x"][end];
 piag_objective     = Objective(A,b,λ); # initializes worker_objective
 piag_solver        = PiagSolver(piag_objective); # initializes worker_solver
 
-history_async_piag = optimize(x, epochs, paper_solver, verbose);
+history_async_piag = optimize(x, epochs, piag_solver, verbose);
 
 iterations=history_async_piag.iteration; verbose = iterations÷10;
-history_sync_piag  = sync_optimize(x, iterations, paper_solver, verbose);
+history_sync_piag  = sync_optimize(x, iterations, piag_solver, verbose);
 
 x_star_piag = history_sync_piag.logs["x"][end];
 
@@ -51,7 +51,7 @@ x_star_piag = history_sync_piag.logs["x"][end];
 using LinearAlgebra
 
 h(x) = sum(x.*log.(x))
-∇h(x) = 1+log.(x)
+∇h(x) = 1 .+ log.(x)
 D(h,∇h,x,y) = h(x) - h(y) - ∇h(y)⋅(x-y)
 
 using Plots 
@@ -65,7 +65,7 @@ pgfplotsx()
 p = "Epochs" 
 # p = "Iterations"
 
-plot()
+plt = plot()
 for (x_star, history, name) in zip([x_star_paper, x_star_piag],[history_sync_paper, history_sync_piag], ["sync_paper", "sync_piag"])
     if p=="Time"
         X = history.logs["elapsed"]
@@ -83,17 +83,16 @@ end
 xlabel!(p)
 ylabel!(L"D_h(x_*,x_k)")
 
-using Plots 
-using PGFPlotsX
-using LaTeXStrings
+savefig(plt,"1.pdf")
 
-pgfplotsx()
+
+
 
 # p = "Time"
 # p = "Epochs" 
 p = "Iterations"
 
-plot()
+plt = plot()
 for (x_star, history, name) in zip([x_star_paper, x_star_piag],[history_async_paper, history_async_piag], ["async_paper", "async_piag"])
     if p=="Time"
         X = history.logs["elapsed"]
@@ -110,5 +109,9 @@ end
     
 xlabel!(p)
 ylabel!(L"D_h(x_*,x_k)")
+
+savefig(plt,"2.pdf")
+
+rmprocs(workers())
 
 # display(plt)

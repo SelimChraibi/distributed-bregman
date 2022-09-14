@@ -1,4 +1,4 @@
-using TickTock
+@everywhere using TickTock
 ENV["TICKTOCK_MESSAGES"] = false
 
 export optimize
