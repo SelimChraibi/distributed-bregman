@@ -9,9 +9,11 @@ struct PiagSolver <: AbstractSolver
             x₋ = copy(last(history.logs["x"]))
             m = objective.m
             x = zeros((m,1))
+
             @inbounds @simd for j in 1:m
                 x[j] = 1/exp(γ*objective.λ + ū[j] - log(x₋[j]))
             end
+            
             log!(history, "ū", ū)
             return x
         end
