@@ -1,8 +1,9 @@
 struct PiagSolver <: AbstractSolver
     step::Function
-    objective::PiagObjective
-    function PiagSolver(objective::PiagObjective)
-        function step(update::Matrix{Float64}, history::History, γ=1/objective.L::Float64)
+    objective::Objective
+    γ::Float64
+    function PiagSolver(objective::Objective, γ=1/objective.L::Float64)
+        function step(update::Matrix{Float64}, history::History)
             ū = last!(history, "ū"; default=history.logs["x"][end])
             ū = ū + update/nworkers()
             x₋ = copy(last(history.logs["x"]))
@@ -14,15 +15,16 @@ struct PiagSolver <: AbstractSolver
             log!(history, "ū", ū)
             return x
         end
-        @everyworker worker_solver = WorkerPiagSolver(worker_objective)
-        new(step, objective)
+        @everyworker worker_solver = WorkerPiagSolver(worker_objective, $γ)
+        new(step, objective, γ)
     end
 end
 
 @everyworker struct WorkerPiagSolver
     step::Function
-    worker_objective::WorkerPiagObjective
-    function WorkerPiagSolver(worker_objective::WorkerPiagObjective, γ=1/worker_objective.L::Float64)
+    worker_objective::WorkerObjective
+    γ::Float64
+    function WorkerPiagSolver(worker_objective::WorkerObjective, γ)
         function step(x::Matrix{Float64}, worker_history::WorkerHistory)
             u = last!(worker_history, "u"; default=worker_history.logs["x"][end])
             n,m = worker_objective.n, worker_objective.m
@@ -41,6 +43,6 @@ end
             log!(worker_history, "u", u)
             return Δ
         end
-        new(step, worker_objective)
+        new(step, worker_objective, γ)
     end
 end
