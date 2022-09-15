@@ -1,5 +1,5 @@
-using TickTock
-ENV["TICKTOCK_MESSAGES"] = false
+@everywhere using TickTock
+@everywhere ENV["TICKTOCK_MESSAGES"] = false
 
 export optimize
 

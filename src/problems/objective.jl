@@ -46,7 +46,7 @@ end
         L = norm(A,1)
         function f(x::Array{Float64, 2})
             s = 0
-            @inbounds @simd for i in 1:n
+            for i in 1:n
                 ai = A[i,:]
                 s += ai⋅x * log(ai⋅x) 
                 s -= log(b[i]+1) * ai⋅x
@@ -56,7 +56,7 @@ end
         end
         function ∇f(x::Array{Float64, 2})
             s = zeros(size(x))    
-            @inbounds @simd for i in 1:n
+            for i in 1:n
                 ai = A[i,:]
                 s += ai * log(ai⋅x / b[i])
             end    

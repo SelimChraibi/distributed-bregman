@@ -41,7 +41,7 @@ end
 
 function log!(history::History, f::Function) 
     history.logs[string(f)] = []
-    @inbounds @simd for x in history.logs["x"] # map ?
+    for x in history.logs["x"] # map ?
         append!(history.logs[string(f)],[f(x)]) 
     end
 end

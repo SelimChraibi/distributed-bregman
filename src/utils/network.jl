@@ -64,7 +64,7 @@ function send(packet::MasterPacket, worker::Int64, network::Network)
 end
 
 function send(packet::Any, network::Network)
-    @inbounds @simd for worker in workers()
+    for worker in workers()
         put!(network.down_remote_channels[worker], packet)
     end
 end

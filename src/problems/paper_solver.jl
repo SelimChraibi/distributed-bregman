@@ -4,17 +4,19 @@ struct PaperSolver <: AbstractSolver
     γ::Float64
     function PaperSolver(objective::Objective, γ=1/objective.L::Float64)
         function step(update::Matrix{Float64}, history::History)
+            m = objective.m
             ū = last!(history, "ū"; default=history.logs["x"][end])
             ū = ū + update/nworkers()
-            m = objective.m
             x = zeros((m,1))
+            
             for j in 1:m
                 x[j] = 1/exp(1 + γ*objective.λ + ū[j])
             end
             log!(history, "ū", ū)
             return x
         end
-        @everyworker worker_solver = WorkerPaperSolver(worker_objective, $γ)
+        γ_factor = γ*objective.L
+        @everyworker worker_solver = WorkerPaperSolver(worker_objective, $γ_factor/worker_objective.L)
         new(step, objective, γ)
     end
 end
