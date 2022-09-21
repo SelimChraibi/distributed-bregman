@@ -3,7 +3,8 @@ mutable struct History
     iteration::Int64
     updates_per_worker::Dict{Int64, Int64}
     logs::Dict{String,Any}
-    function History(x)
+    verbose::Int64
+    function History(x,verbose=0::Int64)
         epoch = 1
         iteration = 1
         updates_per_worker = Dict(worker=>0 for worker in workers())
@@ -12,15 +13,15 @@ mutable struct History
         logs["elapsed"] = [0.0]
         logs["epochs"] = [1]
         @everyworker (worker_history = WorkerHistory($x))
-        new(epoch, iteration, updates_per_worker, logs)
+        new(epoch, iteration, updates_per_worker, logs, verbose)
     end
 end
 
-function log!(history::History, worker::Int64, x::Matrix{Float64}, elapsed::Float64, verbose=0::Int64)
+function log!(history::History, worker::Int64, x::Matrix{Float64}, elapsed::Float64)
     
-    verbose!=0 && history.iteration==1 && println("epoch=$(history.epoch), elapsed=$(history.logs["elapsed"][end])")
+    history.verbose!=0 && history.iteration==1 && println("epoch=$(history.epoch), elapsed=$(history.logs["elapsed"][end])")
     
-    if worker == -1
+    if worker == 0
         for worker in keys(history.updates_per_worker)
             history.updates_per_worker[worker] += 1
         end
@@ -35,7 +36,9 @@ function log!(history::History, worker::Int64, x::Matrix{Float64}, elapsed::Floa
     if all(values(history.updates_per_worker) .> 2*history.epoch)
         append!(history.logs["epochs"], [history.iteration])
         history.epoch += 1
-        verbose!=0 && history.epoch%verbose==0 && println("epoch=$(history.epoch), elapsed=$(history.logs["elapsed"][end])")
+        if history.verbose!=0 && history.epoch%history.verbose==0 
+            println("epoch=$(history.epoch), elapsed=$(history.logs["elapsed"][end])")
+        end
     end
 end
 

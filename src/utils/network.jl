@@ -57,6 +57,12 @@ function Base.close(network::Network)
     close.(values(network.down_remote_channels))
 end
 
+@everyworker function Base.close(worker_network::WorkerNetwork)
+    close(worker_network.up_remote_channel)
+    close(worker_network.down_remote_channel)
+    GC.gc()
+end
+
 ########################################
 
 function send(packet::MasterPacket, worker::Int64, network::Network)
