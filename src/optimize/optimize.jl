@@ -20,7 +20,7 @@ function sync_optimize(x::Matrix{Float64}, solver::AbstractSolver;
     end
 
 
-    while (epochs==0 || history.epoch < epochs) && (time==0.0 || peektimer()<time)
+    while (epochs==0 || history.epoch < epochs) && (time==0.0 || history.logs["elapsed"][end]<time)
         update = zeros(size(x))
         for worker in workers()
             packet = receive(network)
@@ -55,7 +55,7 @@ function async_optimize(x::Matrix{Float64}, solver::AbstractSolver;
     end
 
 
-    while (epochs==0 || history.epoch < epochs) && (time==0.0 || peektimer()<time)
+    while (epochs==0 || history.epoch < epochs) && (time==0.0 || history.logs["elapsed"][end]<time)
         packet = receive(network)
         x = solver.step(packet.update, history)
         log!(history, packet.worker, x, peektimer())

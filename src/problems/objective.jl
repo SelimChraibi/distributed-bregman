@@ -17,12 +17,12 @@ struct Objective
         L = norm(A,1) 
         n,m = size(A)
         
-        @everyworker worker_objective = WorkerObjective($n÷nworkers(),$m,$A.localpart,$b.localpart)
+        @everyworker worker_objective = WorkerObjective($n÷nworkers(),$m,$A.localpart,$b.localpart,$λ)
         
         function f(x::Array{Float64, 2})
             @distributed (+) for worker = workers()
                 worker_objective.f(x)
-            end
+            end 
         end
 
         function ∇f(x::Array{Float64, 2})
@@ -42,7 +42,8 @@ end
     L::Float64
     f::Function
     ∇f::Function
-    function WorkerObjective(n::Int64,m::Int64,A::Matrix{Float64},b::Matrix{Float64})
+    λ::Float64
+    function WorkerObjective(n::Int64,m::Int64,A::Matrix{Float64},b::Matrix{Float64},λ::Float64)
         L = norm(A,1)
         function f(x::Array{Float64, 2})
             s = 0
@@ -51,8 +52,8 @@ end
                 s += ai⋅x * log(ai⋅x) 
                 s -= log(b[i]+1) * ai⋅x
                 s += b[i] 
-            end    
-            s
+            end
+            s + λ*norm(x,1)
         end
         function ∇f(x::Array{Float64, 2})
             s = zeros(size(x))    
@@ -60,8 +61,8 @@ end
                 ai = A[i,:]
                 s += ai * log(ai⋅x / b[i])
             end    
-            s
+            s + λ*sign.(x)
         end
-        new(n,m,A,b,L,f,∇f)
+        new(n,m,A,b,L,f,∇f,λ)
     end
 end
