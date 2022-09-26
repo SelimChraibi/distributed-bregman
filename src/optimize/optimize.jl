@@ -15,7 +15,7 @@ function sync_optimize(x::Matrix{Float64}, solver::AbstractSolver;
         local packet = receive(worker_network)
         local t = @elapsed local update = worker_solver.step(packet.x, worker_history)
         myid() in keys($slow_workers) && sleep($slow_workers[myid()]*t)
-        log!(worker_history, packet.x, update)
+        # log!(worker_history, packet.x, update)
         send(WorkerPacket(update), worker_network)
     end
 
@@ -50,7 +50,7 @@ function async_optimize(x::Matrix{Float64}, solver::AbstractSolver;
         local packet = receive(worker_network)
         local t = @elapsed local update = worker_solver.step(packet.x, worker_history)
         myid() in keys($slow_workers) && sleep($slow_workers[myid()]*t)
-        log!(worker_history, packet.x, update)
+        # log!(worker_history, packet.x, update)
         send(WorkerPacket(update), worker_network)
     end
 

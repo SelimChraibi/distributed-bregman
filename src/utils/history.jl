@@ -1,21 +1,23 @@
 mutable struct History
     epoch::Int64
-    # iteration::Int64
+    iteration::Int64 #
     updates_per_worker::Dict{Int64, Int64}
     logs::Dict{String,Any}
     verbose_print::Function
     function History(x,verbose=0::Int64)
         epoch = 1
-        # iteration = 1
+        iteration = 1 #
         updates_per_worker = Dict(worker=>0 for worker in workers())
         logs = Dict{String,Any}()
         logs["x"]       = [copy(x)]
+        logs["x_iter"]  = [copy(x)]
         logs["elapsed"] = [0.0]
         logs["epochs"]  = [1]
         verbose==0 && (verbose_print = (::Int64, ::Float64; first=true)->())
         verbose!=0 && (verbose_print = (epoch, elapsed; first=false) -> (epoch%verbose==0 || first) && println("epoch=$epoch, elapsed=$elapsed"))
         @everyworker (worker_history = WorkerHistory($x))
-        new(epoch, updates_per_worker, logs, verbose_print)
+        new(epoch, iteration, updates_per_worker, logs, verbose_print)
+        # new(epoch, updates_per_worker, logs, verbose_print)
     end
 end
 
@@ -25,14 +27,11 @@ function log!(history::History, worker::Int64, x::Matrix{Float64}, elapsed::Floa
     
     for worker in (worker == 0 ? workers() : [worker])
         history.updates_per_worker[worker] += 1
+        history.iteration += 1 #
+        history.iteration%100==0 && append!(history.logs["x_iter"], [copy(x)]) #
     end
     
-    # history.iteration += 1
-    # append!(history.logs["x"], [copy(x)])
-    # append!(history.logs["elapsed"], [elapsed])
-    
     if all(values(history.updates_per_worker) .> 2*history.epoch)
-        # append!(history.logs["epochs"], [history.iteration])
         history.epoch += 1
         append!(history.logs["x"], [copy(x)])
         append!(history.logs["elapsed"], [elapsed])
@@ -40,12 +39,8 @@ function log!(history::History, worker::Int64, x::Matrix{Float64}, elapsed::Floa
     end
 end
 
-function log!(history::History, f::Function) 
-    history.logs[string(f)] = map(f, history.logs["x"])
-    # history.logs[string(f)] = []
-    # for x in history.logs["x"] # map ?
-    #     append!(history.logs[string(f)],[f(x)]) 
-    # end
+function log!(history::History, f_name::String, f::Function) 
+    history.logs[f_name] = map(f, history.logs["x"]);
 end
 
 @everyworker mutable struct WorkerHistory
