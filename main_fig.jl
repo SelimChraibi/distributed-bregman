@@ -31,7 +31,7 @@ using DistributedArrays
 @everywhere Random.seed!(42)
 
 n = 100
-m = 20
+m = 200
 λ = 0.001
 zero_columns = 0
 
@@ -51,7 +51,7 @@ A = DArray(A);
 
 x_gen = rand(m,1)
 
-b = [@spawnat worker A.localpart*x_gen + 0.01*rand(Poisson(1),(n÷nworkers(),1)) for worker in workers()]
+b = [@spawnat worker A.localpart*x_gen + rand(Poisson(1),(n÷nworkers(),1)) for worker in workers()]
 b = reshape(b, :, 1)
 b = DArray(b);
 
@@ -77,9 +77,9 @@ sync_optimize(rand(m,1), PaperSolver(objective, 0.1), epochs=2);
 ##############################################################
 ####################### Finding x_star #######################
 ##############################################################
-#paper_solver = PaperSolver(objective, 0.99/objective.L)
-#history_sync_paper = sync_optimize(rand(m,1), paper_solver; epochs=10000, verbose=1000);
-#x_star = history_sync_paper.logs["x"][end];
+paper_solver = PaperSolver(objective, 0.99/objective.L)
+history_sync_paper = sync_optimize(rand(m,1), paper_solver; epochs=100000, verbose=1000);
+x_star = history_sync_paper.logs["x"][end];
 
 
 test_gammas = true
@@ -94,7 +94,7 @@ if test_gammas
                         "sync" =>Dict{Float64,History}([]))
 
     x_init = rand(m,1)
-    time = 3
+    time = 60
 
     print("◀︎")
     for γ in 10. .^ (1:0.5:3) ./ objective.L
@@ -173,9 +173,9 @@ end
 ###############################################################
 
 histories = Dict{String, Vector{History}}("piag"=>[], "paper"=>[], "sync"=>[], "piag_best"=>[], "paper_best"=>[], "sync_best"=>[])
-time = 800
+time = 1000
 
-for k in 1:2
+for k in 1:5
     print("◀︎"); x_init = rand(m,1)
     
     ############################# SYNC ############################
@@ -347,7 +347,7 @@ plt = learning_curves(xlabel    = "time",
                       to_plot   = ["sync", "piag", "paper", "sync_best", "piag_best", "paper_best"],
                       file_name = file_name,
                       save_as   = "png",
-                      #x_star    = x_gen,
+                      x_star    = x_star,
                       ribbon    = false)
 
 
@@ -358,7 +358,7 @@ plt = learning_curves(xlabel    = "time",
                       to_plot   = ["sync", "piag", "paper", "sync_best", "piag_best", "paper_best"],
                       file_name = file_name,
                       save_as   = "tikz",
-                      #x_star    = x_gen,
+                      x_star    = x_star,
                       ribbon    = false)
 
 pltA = learning_curves(xlabel   = "iterations", 
@@ -366,7 +366,7 @@ pltA = learning_curves(xlabel   = "iterations",
                       yscale    = :log,
                       histories = histories,
                       to_plot   = ["paper"],
-                      #x_star    = x_gen,
+                      x_star    = x_star,
                       ribbon    = false);
 
 pltB = learning_curves(xlabel   = "iterations", 
@@ -374,7 +374,7 @@ pltB = learning_curves(xlabel   = "iterations",
                       yscale    = :log,
                       histories = histories,
                       to_plot   = ["paper"],
-                      #x_star    = x_gen,
+                      x_star    = x_star,
                       ribbon    = false);
 
 pltC = learning_curves(xlabel   = "time", 
@@ -382,7 +382,7 @@ pltC = learning_curves(xlabel   = "time",
                       yscale    = :log,
                       histories = histories,
                       to_plot   = ["paper", "sync"],
-                      #x_star    = x_gen,
+                      x_star    = x_star,
                       ribbon    = false);
 
 
