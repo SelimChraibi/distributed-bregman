@@ -88,6 +88,7 @@ savefig(plt,"1.pdf")
 
 
 
+
 # p = "Time"
 # p = "Epochs" 
 p = "Iterations"
