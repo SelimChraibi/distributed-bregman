@@ -82,7 +82,7 @@ history_sync_paper = sync_optimize(rand(m,1), paper_solver; epochs=10000, verbos
 x_star = history_sync_paper.logs["x"][end];
 
 
-test_gammas = false
+test_gammas = true
 
 if test_gammas 
     ###############################################################
@@ -94,7 +94,7 @@ if test_gammas
                         "sync" =>Dict{Float64,History}([]))
 
     x_init = rand(m,1)
-    time = 10
+    time = 5
 
     print("◀︎")
     for γ in 10. .^ (1:0.5:3) ./ objective.L
@@ -173,7 +173,7 @@ end
 ###############################################################
 
 histories = Dict{String, Vector{History}}("piag"=>[], "paper"=>[], "sync"=>[], "piag_best"=>[], "paper_best"=>[], "sync_best"=>[])
-time = 120
+time = 60*7
 
 for k in 1:2
     print("◀︎"); x_init = rand(m,1)
@@ -378,7 +378,7 @@ plt = learning_curves(xlabel    = "time",
                       ylabel    = "bregman",
                       yscale    = :log,
                       histories = histories,
-                      to_plot   = ["piag_best", "paper_best"],
+                      to_plot   = ["piag_best", "paper_best","sync_best"],
                       file_name = "comp_tuned",
                       save_as   = "tikz",
                       #x_star    = x_star,
