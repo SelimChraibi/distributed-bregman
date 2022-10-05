@@ -4,7 +4,7 @@ This repo implements a distributed and asynchronous optimisation algorithm. This
 
 The convergence properties of this algorithm are described in our paper [^2].
 
-To start using the code `cd` to the project directory, switch to julia's REPL mode and call
+To start using the code, `cd` to the project directory, then switch to julia's REPL mode and call
 
 ```shell
 (v1.0) pkg> activate .
